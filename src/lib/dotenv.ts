@@ -8,7 +8,7 @@ declare global {
             readonly CLIENT_ID: string;
             readonly GUILD_ID: string;
             readonly TOKEN: string;
-            readonly SERVER_PORT: number;
+            readonly SERVER_PORT: string;
         }
     }
 }
