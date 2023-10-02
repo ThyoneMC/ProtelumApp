@@ -1,0 +1,35 @@
+{
+  "name": "protelumapp",
+  "version": "1.0.0",
+  "description": "Server for protelum plugin",
+  "keywords": [
+    "protelum"
+  ],
+  "main": "build/index.js",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/thyonemc/protelumapp.git"
+  },
+  "author": "ing3kth (https://github.com/KTNG-3)",
+  "license": "MIT",
+  "devDependencies": {
+    "@types/express": "^4.17.18",
+    "@types/node": "^20.8.0",
+    "dotenv": "^16.3.1",
+    "rimraf": "^5.0.5",
+    "typescript": "^5.2.2"
+  },
+  "dependencies": {
+    "discord.js": "^14.13.0",
+    "express": "^4.18.2",
+    "tslib": "^2.6.2"
+  },
+  "scripts": {
+    "clean": "npm exec -- npx rimraf \"build\" \"tsconfig.tsbuildinfo\"",
+    "compile": "npx tsc --build tsconfig.json",
+    "compile:clean": "npm run clean && npm run compile",
+    "build": "npm run compile:clean",
+    "test": "ts-node src/index.ts",
+    "start": "node build/index.js"
+  }
+}

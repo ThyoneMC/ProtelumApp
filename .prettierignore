@@ -1,0 +1,24 @@
+.git/
+.github/
+
+# nodejs
+npm-debug.log*
+report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
+package.json
+
+# log
+logs
+*.log
+npm-debug.log*
+
+# temp, cache
+.npm
+.eslintcache
+*.tgz
+*.tsbuildinfo
+
+# project
+LICENSE
+tsconfig.tsbuildinfo
+
+build/

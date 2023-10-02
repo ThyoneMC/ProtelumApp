@@ -1,0 +1,43 @@
+.git/
+
+# nodejs
+npm-debug.log*
+report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
+package-lock.json
+node_modules/
+
+# env
+.env
+.env.test
+.env.local
+.env.test.local
+.env.production.local
+.env.development.local
+
+# vscode
+.vscode/
+
+# log
+logs
+*.log
+npm-debug.log*
+
+# temp, cache
+.npm
+.eslintcache
+*.tgz
+*.tsbuildinfo
+
+*.cache
+cache/
+
+*.tmp
+*.temp
+temp/
+
+# project
+build/
+
+# test
+test/
+tests/
