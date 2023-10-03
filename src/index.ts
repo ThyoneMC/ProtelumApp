@@ -132,7 +132,7 @@ import { Client, GatewayIntentBits, Partials, REST, Routes, SlashCommandBuilder,
     );
 
     // team update
-    app.put("/team", async (request, response) => {
+    app.put("/teams", async (request, response) => {
         console.info("Received: PUT team");
 
         if (request.headers.data == undefined || typeof request.headers.data == "object") {
@@ -202,20 +202,19 @@ import { Client, GatewayIntentBits, Partials, REST, Routes, SlashCommandBuilder,
                     roleId: teamRole.id,
                     teamId: team.uuid
                 });
-
-                return;
             }
 
             // member permission
             const allMembers = await guild.members.fetch();
             for (const member of allMembers.values()) {
                 try {
-                    const user = UsersDatabase.getById(member.id);
+                    const user = UsersDatabase.getByDiscordId(member.id);
                     const haveRole = member.roles.cache.get(discordTeamData.roleId);
+                    const inTeam = team.members.find(member => member.uuid == user?.uuid);
 
-                    if (user && haveRole) continue;
-                    if (!user && haveRole) member.roles.remove(discordTeamData.roleId);
-                    if (user && !haveRole) member.roles.add(discordTeamData.roleId);
+                    if (!user) continue;
+                    else if (!inTeam && haveRole) member.roles.remove(discordTeamData.roleId);
+                    else if (inTeam && !haveRole) member.roles.add(discordTeamData.roleId);
                 } catch (error) {
                     continue;
                 }
@@ -276,7 +275,8 @@ import { Client, GatewayIntentBits, Partials, REST, Routes, SlashCommandBuilder,
                 verifiedUser.push(_verify);
 
                 await event.reply({
-                    content: `Done!, ${bold("Please rejoin the game to verify")}`
+                    content: `Done!, ${bold("Please rejoin the game to verify")}`,
+                    ephemeral: true
                 });
                 return;
             }
