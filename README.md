@@ -16,6 +16,12 @@ port for `express` server
 SERVER_PORT=3000
 ```
 
+path for saving some data
+
+```dosini
+DATA_PATH="./test/data/"
+```
+
 ## settings
 
 https://discord.com/developers/applications/:applicationID/bot

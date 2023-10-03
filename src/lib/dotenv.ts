@@ -9,6 +9,7 @@ declare global {
             readonly GUILD_ID: string;
             readonly TOKEN: string;
             readonly SERVER_PORT: string;
+            readonly DATA_PATH: string;
         }
     }
 }

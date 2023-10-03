@@ -1,14 +1,16 @@
+import ContentBase from "./ContentBase";
+
 export enum TeamRole {
     Owner,
     Admin,
     Member,
 }
 
-export interface TeamMember {
+export interface TeamMember extends ContentBase {
     role: TeamRole;
 }
 
-export interface Team {
+export interface Team extends ContentBase {
     name: string;
     members: TeamMember[];
     invites: String[];

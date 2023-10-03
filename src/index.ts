@@ -7,6 +7,8 @@ app.use(bodyParser.json());
 import type { ServerResponse, VerifyFormat } from "./types/Response";
 import type { Team } from "./types/Team";
 
+import { UsersDatabase, DiscordDatabase } from "./lib/database";
+
 function createResponse<T>(statusCode: number, data: T): ServerResponse<T> {
     return {
         status: statusCode,
@@ -15,6 +17,8 @@ function createResponse<T>(statusCode: number, data: T): ServerResponse<T> {
 }
 
 app.get("/", (_request, response) => {
+    console.info("Received: GET Hi");
+
     response.send(
         createResponse(response.statusCode, "Hi")
     );
@@ -25,6 +29,8 @@ let verifiedUser: Array<VerifyFormat> = [];
 
 // new verify
 app.post("/:uuid/:verify_code", async (request, response) => {
+    console.info("Received: POST verify");
+
     if (verifications.find(verify => verify.uuid == request.params.uuid) != undefined) {
         response.send(
             createResponse(400, "Bad Request")
@@ -48,9 +54,17 @@ app.post("/:uuid/:verify_code", async (request, response) => {
 
 // is verified
 app.get("/:uuid", async (request, response) => {
+    console.info("Received: GET verify");
+
     for (const _verify of verifiedUser) {
         if (_verify.uuid == request.params.uuid) {
             verifiedUser = verifiedUser.filter(user => user.uuid != request.params.uuid);
+
+            await UsersDatabase.update({
+                uuid: request.params.uuid,
+                createdAt: Date.now(),
+                discordId: _verify.discordId,
+            });
 
             response.send(
                 createResponse(200, _verify)
@@ -67,9 +81,13 @@ app.get("/:uuid", async (request, response) => {
 });
 
 import env from "./lib/dotenv"
-import { Client, GatewayIntentBits, Partials, REST, Routes, SlashCommandBuilder, SlashCommandSubcommandBuilder, SlashCommandStringOption, PresenceUpdateStatus, ActivityType, bold} from "discord.js";
+
+import { Client, GatewayIntentBits, Partials, REST, Routes, SlashCommandBuilder, SlashCommandSubcommandBuilder, SlashCommandStringOption, PresenceUpdateStatus, ActivityType, bold, ChannelType, PermissionsBitField } from "discord.js";
 
 (async () => {
+    await UsersDatabase.get();
+    await DiscordDatabase.get();
+
     const client = new Client({
         intents: [
             GatewayIntentBits.Guilds,
@@ -115,6 +133,8 @@ import { Client, GatewayIntentBits, Partials, REST, Routes, SlashCommandBuilder,
 
     // team update
     app.put("/team", async (request, response) => {
+        console.info("Received: PUT team");
+
         if (request.headers.data == undefined || typeof request.headers.data == "object") {
             response.send(
                 createResponse(400, "Bad Request")
@@ -128,24 +148,112 @@ import { Client, GatewayIntentBits, Partials, REST, Routes, SlashCommandBuilder,
         );
 
         const data: Team[] = JSON.parse(request.headers.data);
-        for (const team of data) {
-            const guild = client.guilds.cache.get(env.GUILD_ID);
-            if (guild == undefined) return;
 
-            guild.roles.create({
-                color: "Aqua",
-                name: team.name,
-                permissions: [],
-                mentionable: true,
-                position: 0
-            });
+        const guild = client.guilds.cache.get(env.GUILD_ID);
+        if (guild == undefined) return;
+
+        for (const team of data) {
+            const discordTeamData = DiscordDatabase.getById(team.uuid);
+
+            // new team
+            if (!discordTeamData) {
+                const teamRole = await guild.roles.create({
+                    color: "Aqua",
+                    name: team.name,
+                    permissions: [],
+                    mentionable: true,
+                    position: 0
+                });
+
+                const teamCategoey = await guild.channels.create({
+                    name: team.name,
+                    type: ChannelType.GuildCategory,
+                    permissionOverwrites: [
+                        {
+                            id: env.GUILD_ID,
+                            deny: [PermissionsBitField.Flags.ViewChannel],
+                        },
+                        {
+                            id: teamRole.id,
+                            allow: [PermissionsBitField.Flags.ViewChannel]
+                        }
+                    ],
+                    position: 0,
+                });
+
+                const voiceChannel = await guild.channels.create({
+                    name: "Voice",
+                    type: ChannelType.GuildVoice,
+                    parent: teamCategoey,
+                    position: 0,
+                });
+
+                const messageChannel = await guild.channels.create({
+                    name: "Text",
+                    type: ChannelType.GuildText,
+                    parent: teamCategoey,
+                    position: 0,
+                });
+
+                await DiscordDatabase.update({
+                    categoryId: teamCategoey.id,
+                    voiceChannelId: voiceChannel.id,
+                    messageChannelId: messageChannel.id,
+                    roleId: teamRole.id,
+                    teamId: team.uuid
+                });
+
+                return;
+            }
+
+            // member permission
+            const allMembers = await guild.members.fetch();
+            for (const member of allMembers.values()) {
+                try {
+                    const user = UsersDatabase.getById(member.id);
+                    const haveRole = member.roles.cache.get(discordTeamData.roleId);
+
+                    if (user && haveRole) continue;
+                    if (!user && haveRole) member.roles.remove(discordTeamData.roleId);
+                    if (user && !haveRole) member.roles.add(discordTeamData.roleId);
+                } catch (error) {
+                    continue;
+                }
+            }
         }
+    });
+
+    // team delete
+    app.delete("/:uuid", async (request, response) => {
+        console.info("Received: DELETE team");
+
+        const teamData = DiscordDatabase.getById(request.params.uuid);
+        if (teamData) {
+            const guild = client.guilds.cache.get(env.GUILD_ID);
+            if (!guild) return;
+
+            await guild.roles.delete(teamData.roleId);
+            await guild.channels.delete(teamData.voiceChannelId);
+            await guild.channels.delete(teamData.messageChannelId);
+            await guild.channels.delete(teamData.categoryId);
+
+            DiscordDatabase.delete(teamData.teamId);
+
+            response.send(
+                createResponse(200, "Team Deleted")
+            );
+            return;
+        }
+
+        response.send(
+            createResponse(404, "Not Found")
+        );
     });
 
     // event
 
     client.once("ready", (event: Client<true>) => {
-        console.log(`${event.user.tag} is online!`);
+        console.info(`${event.user.tag} is online!`);
 
         event.user.setStatus(PresenceUpdateStatus.Online);
         event.user.setActivity({
