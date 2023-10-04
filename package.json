@@ -30,7 +30,8 @@
     "clean": "npm exec -- npx rimraf \"build\" \"tsconfig.tsbuildinfo\"",
     "compile": "npx tsc --build tsconfig.json",
     "compile:clean": "npm run clean && npm run compile",
-    "build": "npm run compile:clean",
+    "format": "prettier --config ./.prettierrc --ignore-path ./.prettierignore --write \"src/**/*\"",
+    "build": "npm run format && npm run compile:clean",
     "test": "ts-node src/index.ts",
     "start": "node build/index.js"
   }

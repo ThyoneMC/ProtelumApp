@@ -1,9 +1,9 @@
-import ContentBase from "./ContentBase";
+import { ContentBase } from "./content";
 
 export enum TeamRole {
     Owner,
     Admin,
-    Member,
+    Member
 }
 
 export interface TeamMember extends ContentBase {

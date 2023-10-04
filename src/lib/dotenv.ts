@@ -1,7 +1,6 @@
 import dotenv from "dotenv";
 dotenv.config();
 
-import process from "node:process";
 declare global {
     namespace NodeJS {
         interface ProcessEnv {
@@ -13,4 +12,6 @@ declare global {
         }
     }
 }
+
+import process from "node:process";
 export default process.env;
