@@ -24,7 +24,7 @@ DATA_PATH="./test/data/"
 
 ## settings
 
-https://discord.com/developers/applications/:applicationID/bot
+https://discord.com/developers/applications/(application_id)/bot
 
 **Privileged Gateway Intents**
 
@@ -35,7 +35,7 @@ https://discord.com/developers/applications/:applicationID/bot
 
 Make verification
 ```
-localhost:port/:userId:/:verifyCode
+localhost:port/(userId)/(verifyCode)
 ```
 
 verifying on discord (example, verifyCode: 123456)
@@ -45,5 +45,5 @@ verifying on discord (example, verifyCode: 123456)
 
 Check verification
 ```
-localhost:port/:verifyCode
+localhost:port/(verifyCode)
 ```
