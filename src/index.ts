@@ -19,7 +19,7 @@ function createResponse<T>(statusCode: number, data: T): ServerResponse<T> {
 app.get("/", (_request, response) => {
     console.info("Received: GET Hi");
 
-    response.send(
+    response.json(
         createResponse(response.statusCode, "Hi")
     );
 });
@@ -32,7 +32,7 @@ app.post("/:uuid/:verify_code", async (request, response) => {
     console.info("Received: POST verify");
 
     if (verifications.find(verify => verify.uuid == request.params.uuid) != undefined) {
-        response.send(
+        response.json(
             createResponse(400, "Bad Request")
         );
 
@@ -47,7 +47,7 @@ app.post("/:uuid/:verify_code", async (request, response) => {
     verifications.push(_verify);
     console.info(`ADD: [${_verify.uuid}: ${_verify.code}]`);
 
-    response.send(
+    response.json(
         createResponse(200, "verification Request Created")
     );
 });
@@ -66,7 +66,7 @@ app.get("/:uuid", async (request, response) => {
                 discordId: _verify.discordId,
             });
 
-            response.send(
+            response.json(
                 createResponse(200, _verify)
             );
 
@@ -75,7 +75,7 @@ app.get("/:uuid", async (request, response) => {
         }
     }
 
-    response.send(
+    response.json(
         createResponse(404, "Not Found")
     );
 });
@@ -135,19 +135,19 @@ import { Client, GatewayIntentBits, Partials, REST, Routes, SlashCommandBuilder,
     app.put("/teams", async (request, response) => {
         console.info("Received: PUT team");
 
-        if (request.headers.data == undefined || typeof request.headers.data == "object") {
-            response.send(
+        if (request.body == undefined || typeof request.body != "object") {
+            response.json(
                 createResponse(400, "Bad Request")
             );
 
             return;
         }
 
-        response.send(
+        response.json(
             createResponse(200, "OK")
         );
 
-        const data: Team[] = JSON.parse(request.headers.data);
+        const data: Team[] = request.body;
 
         const guild = client.guilds.cache.get(env.GUILD_ID);
         if (guild == undefined) return;
@@ -238,13 +238,13 @@ import { Client, GatewayIntentBits, Partials, REST, Routes, SlashCommandBuilder,
 
             DiscordDatabase.delete(teamData.teamId);
 
-            response.send(
+            response.json(
                 createResponse(200, "Team Deleted")
             );
             return;
         }
 
-        response.send(
+        response.json(
             createResponse(404, "Not Found")
         );
     });
