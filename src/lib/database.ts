@@ -41,6 +41,14 @@ export default class BaseDatabase<T extends ContentBase> {
         return this.data[uuid];
     }
 
+    getKeys(): ContentUUID[] {
+        return Object.keys(this.data);
+    }
+
+    getValues(): T[] {
+        return Object.values(this.data);
+    }
+
     async update(data: T) {
         this.data[data.uuid] = data;
 

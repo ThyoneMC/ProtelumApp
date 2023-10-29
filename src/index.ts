@@ -8,20 +8,20 @@ import env from "./lib/dotenv";
 
 import type { API } from "./model/api";
 
-import { TeamDiscord, DiscordUser } from "./database/index";
+import { TeamDiscord, DiscordUser, Notify } from "./database/index";
 
 import createClient from "./discord";
 
 (async () => {
     await TeamDiscord.load();
     await DiscordUser.load();
+    await Notify.load();
 
     const client = await createClient();
 
     const app = express().use(bodyParser.json());
 
     const apiFolders = path.join(__dirname, "api");
-
     for (const topFolders of await fs.readdir(apiFolders)) {
         const thatFolders = path.join(apiFolders, topFolders);
 
@@ -30,6 +30,7 @@ import createClient from "./discord";
 
             const _name = `/${apiCommand.name}${apiCommand.path}`;
             const _callback = apiCommand.getExecute(client);
+
             switch (apiCommand.method) {
                 case "GET": {
                     app.get(_name, _callback);

@@ -7,7 +7,7 @@ import { ChannelType, PermissionsBitField } from "discord.js";
 import { DiscordUser, TeamDiscord } from "../../database/index";
 import type { Team } from "../../model/team";
 
-export default new API("team", "PUT", "", async ({ request, client }) => {
+export default new API("team/update", "PUT", "", async ({ request, client }) => {
     if (!client) return createResponse(500);
 
     if (request.body == undefined || typeof request.body != "object") {

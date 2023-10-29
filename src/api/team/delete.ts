@@ -4,7 +4,7 @@ import env from "../../lib/dotenv";
 
 import { TeamDiscord, DiscordUser } from "../../database/index";
 
-export default new API("team", "DELETE", "/:uuid", async ({ request, client }) => {
+export default new API("team/delete", "DELETE", "/:uuid", async ({ request, client }) => {
     if (!client) return createResponse(500);
 
     const teamData = TeamDiscord.get(request.params.uuid);

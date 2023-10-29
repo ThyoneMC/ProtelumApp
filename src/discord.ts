@@ -5,16 +5,16 @@ import {
     REST,
     Routes,
     SlashCommandBuilder,
-    SlashCommandSubcommandBuilder,
-    SlashCommandStringOption,
     PresenceUpdateStatus,
-    ActivityType,
-    bold
+    ActivityType
 } from "discord.js";
+
+import * as fs from "fs-extra";
+import path from "node:path";
 
 import env from "./lib/dotenv";
 
-import { Verification } from "./database/index";
+import { Command, type CommandInteractionCreate } from "./model/command";
 
 export default async function createClient() {
     const client = new Client({
@@ -31,18 +31,17 @@ export default async function createClient() {
 
     // command
 
-    const command = new SlashCommandBuilder()
-        .setName("protelum")
-        .setDescription("protelum")
-        .addSubcommand(
-            new SlashCommandSubcommandBuilder()
-                .setName("discord")
-                .setDescription("verify your discord with minecraft account")
-                .addStringOption(
-                    new SlashCommandStringOption().setName("code").setDescription("verification code").setRequired(true)
-                )
-        )
-        .toJSON();
+    const command = new SlashCommandBuilder().setName("protelum").setDescription("protelum");
+
+    const commandList: Record<string, CommandInteractionCreate> = {};
+
+    const commandFolders = path.join(__dirname, "command");
+    for (const thatFiles of await fs.readdir(commandFolders)) {
+        const subCommand: Command = (await import(path.join(commandFolders, thatFiles))).default;
+
+        command.addSubcommand(subCommand.command);
+        commandList[subCommand.command.name] = subCommand.getExecute(client);
+    }
 
     const rest = new REST().setToken(env.TOKEN);
     await rest.put(Routes.applicationGuildCommands(env.CLIENT_ID, env.GUILD_ID), {
@@ -64,26 +63,14 @@ export default async function createClient() {
     client.on("interactionCreate", async (event) => {
         if (!event.isChatInputCommand()) return;
         if (event.commandName != "protelum") return;
-        if (event.options.getSubcommand() != "discord") return;
 
-        const verifyCode = event.options.getString("code", true);
+        const name = event.options.getSubcommand(true);
 
-        let verify = Verification.getByCode(verifyCode);
-        if (!verify) {
-            await event.reply({
-                content: "Not Found!"
-            });
+        const command = commandList[name];
+        if (!command) return;
 
-            return;
-        }
-
-        verify.discordId = event.user.id;
-        Verification.update(verify);
-
-        await event.reply({
-            content: `Done!, ${bold("Please rejoin the game to verify")}`,
-            ephemeral: true
-        });
+        console.info(`[${new Date().toLocaleTimeString()} COMMAND] <${name}>`);
+        await command(event);
     });
 
     await client.login(process.env.TOKEN);

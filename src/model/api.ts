@@ -55,10 +55,10 @@ export class API<T, P extends string> {
     private readonly callback: APICallbackFunction<T, P>;
 
     constructor(name: string, method: APIMethod, path: P, callback: APICallbackFunction<T, P>) {
+        this.name = name;
         this.method = method;
         this.path = path;
         this.callback = callback;
-        this.name = name;
     }
 
     getExecute(client: Client): RequestHandler<any> {
@@ -67,13 +67,15 @@ export class API<T, P extends string> {
                 `[${new Date().toLocaleTimeString()} ${this.method}] <${this.name}> ${Object.values(request.params)}`
             );
 
-            response.json(
-                await this.callback({
-                    request,
-                    response,
-                    client
-                })
-            );
+            const data = await this.callback({
+                request,
+                response,
+                client
+            });
+
+            console.log(data);
+
+            response.json(data);
         };
     }
 }

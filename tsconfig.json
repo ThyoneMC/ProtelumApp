@@ -1,9 +1,9 @@
 {
   "compilerOptions": {
-    "composite": true,
     "target": "es2022",
     "module": "commonjs",
     "rootDir": "./src",
+    "declaration": false,
     "outDir": "./build",
     "removeComments": true,
     "importHelpers": true,
